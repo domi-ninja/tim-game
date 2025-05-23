@@ -9,6 +9,7 @@ canvas.height = 800;
 // Game assets and variables
 const gravity = 0.5;
 let gameOver = false;
+let aiEnabled = false; // Flag to enable/disable AI
 
 // Platforms arrayss
 const platforms = [
@@ -55,7 +56,15 @@ const player2 = {
     color: '#3717b1',
     score: 0,
     lastDirection: -1, // 1 for right, -1 for left
-    shootCooldown: 0
+    shootCooldown: 0,
+    aiActions: {
+        moveLeft: false,
+        moveRight: false,
+        jump: false,
+        shoot: false
+    },
+    aiTimer: 0,
+    aiDecisionInterval: 5 // Make decisions every 5 frames
 };
 
 resetPlayer1()
@@ -182,6 +191,12 @@ function playerHit(player) {
 const keys = {};
 document.addEventListener('keydown', (e) => {
     keys[e.code] = true;
+    
+    // Toggle AI with 'T' key
+    if (e.code === 'KeyT') {
+        aiEnabled = !aiEnabled;
+        console.log(`AI ${aiEnabled ? 'enabled' : 'disabled'}`);
+    }
 });
 
 document.addEventListener('keyup', (e) => {
@@ -230,27 +245,49 @@ function movePlayer(player) {
         }
 
     } else {
-        // spieler2
-        // Horizontal movement
-        if (keys.ArrowLeft) {
-            player.velocityX = -player.speed;
-            player.lastDirection = -1;
-        } else if (keys.ArrowRight) {
-            player.velocityX = player.speed;
-            player.lastDirection = 1;
+        // spieler2 - AI or keyboard control
+        if (aiEnabled) {
+            // AI controls
+            if (player.aiActions.moveLeft) {
+                player.velocityX = -player.speed;
+                player.lastDirection = -1;
+            } else if (player.aiActions.moveRight) {
+                player.velocityX = player.speed;
+                player.lastDirection = 1;
+            } else {
+                player.velocityX = 0;
+            }
+            
+            if (player.aiActions.jump && !player.isJumping) {
+                player.velocityY = -player.jumpForce;
+                player.isJumping = true;
+            }
+            
+            if (player.aiActions.shoot) {
+                createBullet(player);
+            }
         } else {
-            player.velocityX = 0;
-        }
+            // Keyboard controls (unchanged)
+            if (keys.ArrowLeft) {
+                player.velocityX = -player.speed;
+                player.lastDirection = -1;
+            } else if (keys.ArrowRight) {
+                player.velocityX = player.speed;
+                player.lastDirection = 1;
+            } else {
+                player.velocityX = 0;
+            }
 
-        // Jumping
-        if ( (keys.ArrowUp || keys.ShiftRight) && !player.isJumping) {
-            player.velocityY = -player.jumpForce;
-            player.isJumping = true;
-        }
-        
-        // Shooting
-        if ( keys.ControlRight || keys.Numpad0) {
-            createBullet(player);
+            // Jumping
+            if ((keys.ArrowUp || keys.ShiftRight) && !player.isJumping) {
+                player.velocityY = -player.jumpForce;
+                player.isJumping = true;
+            }
+            
+            // Shooting
+            if (keys.ControlRight || keys.Numpad0) {
+                createBullet(player);
+            }
         }
     }
 
@@ -346,6 +383,9 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!gameOver) {
+        // Update AI
+        updateAI();
+        
         // Update game state
         movePlayer(player1);
         movePlayer(player2);
@@ -387,4 +427,70 @@ function drawScore() {
 
     ctx.fillStyle = player2.color;
     ctx.fillText(`Score: ${player2.score}`, 600, 30);
+}
+
+// AI logic for player 2
+function updateAI() {
+    if (!aiEnabled) return;
+    
+    player2.aiTimer++;
+    
+    // Make decisions at regular intervals
+    if (player2.aiTimer >= player2.aiDecisionInterval) {
+        player2.aiTimer = 0;
+        const aiDecision = makeAIDecision();
+        player2.aiActions = aiDecision;
+    }
+}
+
+function makeAIDecision() {
+    const actions = {
+        moveLeft: false,
+        moveRight: false,
+        jump: false,
+        shoot: false
+    };
+    
+    // Decide horizontal movement - follow player1
+    if (player1.x < player2.x - 100) {
+        actions.moveLeft = true;
+        player2.lastDirection = -1;
+    } else if (player1.x > player2.x + 100) {
+        actions.moveRight = true;
+        player2.lastDirection = 1;
+    }
+    
+    // Decide when to jump
+    // 1. Jump if player1 is above
+    const needToJumpForTarget = player1.y < player2.y - 50 && !player2.isJumping;
+    
+    // 2. Jump if close to edge of platform
+    let aboutToFallOffPlatform = true;
+    for (const platform of platforms) {
+        if (player2.y + player2.height === platform.y) { // Standing on a platform
+            // Check if we're near the edge
+            const onPlatformEdge = 
+                (player2.x < platform.x + 30 && actions.moveLeft) || 
+                (player2.x + player2.width > platform.x + platform.width - 30 && actions.moveRight);
+            
+            if (!onPlatformEdge) {
+                aboutToFallOffPlatform = false;
+                break;
+            }
+        }
+    }
+    
+    // 3. Sometimes jump randomly to navigate platforms
+    const randomJump = !player2.isJumping && Math.random() < 0.03;
+    
+    // Combine jump conditions
+    actions.jump = needToJumpForTarget || randomJump || (aboutToFallOffPlatform && !player2.isJumping);
+    
+    // Shoot with some probability when player1 is roughly at the same height
+    const heightDifference = Math.abs(player1.y - player2.y);
+    if (heightDifference < 100 && player2.shootCooldown === 0 && Math.random() < 0.3) {
+        actions.shoot = true;
+    }
+    
+    return actions;
 }
