@@ -3,8 +3,8 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Set canvas dimensions to match CSS
-canvas.width = 800;
-canvas.height = 400;
+canvas.width = 1000;
+canvas.height = 800;
 
 // Game assets and variables
 const gravity = 0.5;
@@ -142,13 +142,6 @@ function playerHit(player) {
 console.log(player1);
 console.log(player2);
 
-// Platforms array
-let platforms = [
-    { x: 0, y: 350, width: 200, height: 20, color: '#4CAF50' },
-    { x: 250, y: 320, width: 150, height: 20, color: '#4CAF50' },
-    { x: 450, y: 280, width: 150, height: 20, color: '#4CAF50' },
-    { x: 650, y: 350, width: 200, height: 20, color: '#4CAF50' }
-];
 
 // Input handling
 const keys = {};
@@ -305,6 +298,18 @@ function generatePlatforms() {
     ];
 }
 
+// Platforms arrayss
+let platforms = [
+    { x: 0, y: 350, width: 200, height: 20, color: '#4CAF50' },
+    { x: 280, y: 350, width: 150, height: 20, color: '#4CAF50' },
+    { x: 450, y: 200, width: 150, height: 20, color: '#4CAF50' },
+    { x: 650, y: 350, width: 200, height: 20, color: '#4CAF50' },
+    { x: 500, y: 650, width: 200, height: 20, color: '#4CAF50' },
+    { x: 200, y: 560, width: 200, height: 20, color: '#4CAF50' },
+    { x: 500, y: 475, width: 100, height: 20, color: '#4CAF50' },
+    { x: 0, y: 150, width: 300, height: 20, color: '#4CAF50' },
+    { x: 850, y: 650, width: 200, height: 20, color: '#4CAF50' },
+]
 // Game loop
 function gameLoop() {
     // Clear canvas
