@@ -131,11 +131,9 @@ function checkCollision(obj1, obj2) {
 // Player hit by bullet
 function playerHit(player) {
     if (player.m === 1) {
-        resetPlayer1();
-        player2.score++;
+        playerDie(player1);
     } else {
-        resetPlayer2();
-        player1.score++;
+        playerDie(player2);
     }
 }
 
@@ -283,7 +281,11 @@ function drawGameOver() {
     ctx.textAlign = 'center';
     ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
     ctx.font = '20px Arial';
-    ctx.fillText(`Final Score: ${player1.score} - ${player2.score}`, canvas.width / 2, canvas.height / 2 + 20);
+    if (player1.score > player2.score) {
+        ctx.fillText(`Player 1 gewinnt! ${player1.score}:${player2.score}`, canvas.width / 2, canvas.height / 2 + 20);
+    } else {
+        ctx.fillText(`Player 2 gewinnt! ${player2.score}: ${player1.score}`, canvas.width / 2, canvas.height / 2 + 20);
+    }
     ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 60);
 }
 
