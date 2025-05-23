@@ -12,7 +12,8 @@ let score = 0;
 let gameOver = false;
 
 // Player properties
-const player = {
+const player1 = {
+    m: 1,
     x: 100,
     y: 200,
     width: 32,
@@ -23,6 +24,20 @@ const player = {
     jumpForce: 12,
     isJumping: false,
     color: '#FF5733'
+};
+
+const player2 = {
+    x: 100,
+    m: 2,
+    y: 200,
+    width: 32,
+    height: 48,
+    velocityX: 0,
+    velocityY: 0,
+    speed: 5,
+    jumpForce: 12,
+    isJumping: false,
+    color: '#3717b1'
 };
 
 // Platforms array
@@ -44,7 +59,7 @@ document.addEventListener('keyup', (e) => {
 });
 
 // Game functions
-function drawPlayer() {
+function drawPlayer(player) {
     ctx.fillStyle = player.color;
     ctx.fillRect(player.x, player.y, player.width, player.height);
 }
@@ -56,34 +71,55 @@ function drawPlatforms() {
     });
 }
 
-function movePlayer() {
-    // Horizontal movement
-    if (keys['ArrowLeft'] || keys['KeyA']) {
-        player.velocityX = -player.speed;
-    } else if (keys['ArrowRight'] || keys['KeyD']) {
-        player.velocityX = player.speed;
+function movePlayer(player) {
+    if (player.m == 1) {
+        // Horizontal movement
+        if ( keys['KeyA']) {
+            player.velocityX = -player.speed;
+        } else if (keys['KeyD']) {
+            player.velocityX = player.speed;
+        } else {
+            player.velocityX = 0;
+        }
+
+        // Jumping
+        if (( keys['KeyW'] ) && !player.isJumping) {
+            player.velocityY = -player.jumpForce;
+            player.isJumping = true;
+        }
+
     } else {
-        player.velocityX = 0;
+        // Horizontal movement
+        if (keys['ArrowLeft']) {
+            player.velocityX = -player.speed;
+        } else if (keys['ArrowRight'] ) {
+            player.velocityX = player.speed;
+        } else {
+            player.velocityX = 0;
+        }
+
+        // Jumping
+        if ((keys['ArrowUp'] ) && !player.isJumping) {
+            player.velocityY = -player.jumpForce;
+            player.isJumping = true;
+        }
     }
-    
-    // Jumping
-    if ((keys['ArrowUp'] || keys['KeyW'] || keys['Space']) && !player.isJumping) {
-        player.velocityY = -player.jumpForce;
-        player.isJumping = true;
-    }
-    
+
+
+
+
     // Apply velocity
     player.x += player.velocityX;
     player.y += player.velocityY;
-    
+
     // Apply gravity
     player.velocityY += gravity;
-    
+
     // Platform collision detection
     platforms.forEach(platform => {
-        if (player.y + player.height > platform.y && 
-            player.y < platform.y + platform.height && 
-            player.x + player.width > platform.x && 
+        if (player.y + player.height > platform.y &&
+            player.y < platform.y + platform.height &&
+            player.x + player.width > platform.x &&
             player.x < platform.x + platform.width &&
             player.velocityY > 0) {
             player.y = platform.y - player.height;
@@ -91,7 +127,7 @@ function movePlayer() {
             player.isJumping = false;
         }
     });
-    
+
     // Boundary checks
     if (player.x < 0) {
         player.x = 0;
@@ -99,7 +135,7 @@ function movePlayer() {
     if (player.x + player.width > canvas.width) {
         player.x = canvas.width - player.width;
     }
-    
+
     // Game over if player falls off the screen
     if (player.y > canvas.height) {
         gameOver = true;
@@ -124,7 +160,7 @@ function drawGameOver() {
     ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 60);
 }
 
-function restartGame() {
+function restartGame(player) {
     player.x = 100;
     player.y = 200;
     player.velocityX = 0;
@@ -147,16 +183,18 @@ function generatePlatforms() {
 function gameLoop() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     if (!gameOver) {
         // Update game state
-        movePlayer();
-        
+        movePlayer(player1);
+        movePlayer(player2)
+
         // Draw elements
         drawPlatforms();
-        drawPlayer();
+        drawPlayer(player1);
+        drawPlayer(player2);
         drawScore();
-        
+
         // Increase score over time
         if (frameCount % 10 === 0) {
             score++;
@@ -167,7 +205,7 @@ function gameLoop() {
             restartGame();
         }
     }
-    
+
     // Next frame
     frameCount++;
     requestAnimationFrame(gameLoop);
