@@ -20,11 +20,15 @@ body {
     height: 100vh;
     overflow: hidden;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #gameCanvas {
-    width: 100%;
+    /* width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: contain; */
     background-color: #87CEEB;
 } 
