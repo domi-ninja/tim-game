@@ -285,18 +285,9 @@ function restartGame() {
     player1.score = 0;
     player2.score = 0;
     gameOver = false;
-    generatePlatforms();
     bullets.length = 0; // Clear all bullets
 }
 
-function generatePlatforms() {
-    platforms = [
-        { x: 0, y: 350, width: 200, height: 20, color: '#4CAF50' },
-        { x: 250, y: 320, width: 150, height: 20, color: '#4CAF50' },
-        { x: 450, y: 280, width: 150, height: 20, color: '#4CAF50' },
-        { x: 650, y: 350, width: 200, height: 20, color: '#4CAF50' }
-    ];
-}
 
 // Platforms arrayss
 let platforms = [
