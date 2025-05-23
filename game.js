@@ -12,7 +12,8 @@ let score = 0;
 let gameOver = false;
 
 // Player properties
-const player1 = {
+
+const player1= {
     m: 1,
     x: 100,
     y: 200,
@@ -23,11 +24,12 @@ const player1 = {
     speed: 5,
     jumpForce: 12,
     isJumping: false,
-    color: '#FF5733'
+    color: '#FF5733',
+    score: 0
 };
 
 const player2 = {
-    x: 100,
+    x: 700,
     m: 2,
     y: 200,
     width: 32,
@@ -37,8 +39,29 @@ const player2 = {
     speed: 5,
     jumpForce: 12,
     isJumping: false,
-    color: '#3717b1'
+    color: '#3717b1',
+    score: 0
 };
+
+function resetPlayer1() {
+    player1.x = 100
+    player1.y = 200
+    player1.velocityX = 0
+    player1.velocityY = 0
+    player1.isJumping = false
+}
+
+function resetPlayer2() {
+    player2.x = 100
+    player2.y = 200
+    player2.velocityX = 0
+    player2.velocityY = 0
+    player2.isJumping = false
+}
+
+
+console.log(player1);
+console.log(player2);
 
 // Platforms array
 let platforms = [
@@ -60,19 +83,22 @@ document.addEventListener('keyup', (e) => {
 
 // Game functions
 function drawPlayer(player) {
+    if (!player) return;
     ctx.fillStyle = player.color;
     ctx.fillRect(player.x, player.y, player.width, player.height);
 }
 
 function drawPlatforms() {
-    platforms.forEach(platform => {
+    for (const platform of platforms) {
         ctx.fillStyle = platform.color;
         ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-    });
+    }
 }
 
 function movePlayer(player) {
-    if (player.m == 1) {
+    if (!player) return;
+
+    if (player.m === 1) {
         // Horizontal movement
         if ( keys['KeyA']) {
             player.velocityX = -player.speed;
@@ -116,7 +142,7 @@ function movePlayer(player) {
     player.velocityY += gravity;
 
     // Platform collision detection
-    platforms.forEach(platform => {
+    for (const platform of platforms) {
         if (player.y + player.height > platform.y &&
             player.y < platform.y + platform.height &&
             player.x + player.width > platform.x &&
@@ -126,7 +152,7 @@ function movePlayer(player) {
             player.velocityY = 0;
             player.isJumping = false;
         }
-    });
+    }
 
     // Boundary checks
     if (player.x < 0) {
@@ -138,15 +164,21 @@ function movePlayer(player) {
 
     // Game over if player falls off the screen
     if (player.y > canvas.height) {
-        gameOver = true;
+        playerDie(player)
     }
 }
 
-function drawScore() {
-    ctx.fillStyle = 'white';
-    ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${score}`, 20, 30);
+function playerDie(player) {    
+    if (player.m === 1) {
+        resetPlayer1()
+        player2.score++
+    } else if (player.m === 2) {
+        resetPlayer2()
+        player1.score++
+    }
+    console.log(`${player} died`)
 }
+
 
 function drawGameOver() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
@@ -160,12 +192,11 @@ function drawGameOver() {
     ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 60);
 }
 
-function restartGame(player) {
-    player.x = 100;
-    player.y = 200;
-    player.velocityX = 0;
-    player.velocityY = 0;
-    score = 0;
+function restartGame() {
+    player1.x = 100;
+    player1.y = 200;
+    player2.x = 100;
+    player2.y = 200;
     gameOver = false;
     generatePlatforms();
 }
@@ -194,11 +225,6 @@ function gameLoop() {
         drawPlayer(player1);
         drawPlayer(player2);
         drawScore();
-
-        // Increase score over time
-        if (frameCount % 10 === 0) {
-            score++;
-        }
     } else {
         drawGameOver();
         if (keys['Space']) {
@@ -220,3 +246,10 @@ window.addEventListener('resize', () => {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 }); 
+
+function drawScore() {
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Score: ${player1.score}`, 20, 30);
+    ctx.fillText(`Score: ${player2.score}`, 600, 30);
+}
