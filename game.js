@@ -8,11 +8,9 @@ canvas.height = 400;
 
 // Game assets and variables
 const gravity = 0.5;
-let score = 0;
 let gameOver = false;
 
 // Player properties
-
 const player1= {
     m: 1,
     x: 100,
@@ -25,7 +23,9 @@ const player1= {
     jumpForce: 12,
     isJumping: false,
     color: '#FF5733',
-    score: 0
+    score: 0,
+    lastDirection: 1, // 1 for right, -1 for left
+    shootCooldown: 0
 };
 
 const player2 = {
@@ -40,8 +40,15 @@ const player2 = {
     jumpForce: 12,
     isJumping: false,
     color: '#3717b1',
-    score: 0
+    score: 0,
+    lastDirection: -1, // 1 for right, -1 for left
+    shootCooldown: 0
 };
+
+// Bullets array
+const bullets = [];
+const BULLET_SPEED = 10;
+const SHOOT_COOLDOWN = 50; // Frames between shots
 
 function resetPlayer1() {
     player1.x = 100
@@ -52,13 +59,85 @@ function resetPlayer1() {
 }
 
 function resetPlayer2() {
-    player2.x = 100
+    player2.x = 700
     player2.y = 200
     player2.velocityX = 0
     player2.velocityY = 0
     player2.isJumping = false
 }
 
+// Create bullet function
+function createBullet(player) {
+    if (player.shootCooldown > 0) return;
+    
+    bullets.push({
+        x: player.x + player.width/2,
+        y: player.y + player.height/2,
+        width: 8,
+        height: 8,
+        velocityX: BULLET_SPEED * player.lastDirection,
+        color: player.color,
+        owner: player.m
+    });
+    
+    player.shootCooldown = SHOOT_COOLDOWN;
+}
+
+// Update bullets function
+function updateBullets() {
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        const bullet = bullets[i];
+        bullet.x += bullet.velocityX;
+        
+        // Remove bullets that go off-screen
+        if (bullet.x < 0 || bullet.x > canvas.width) {
+            bullets.splice(i, 1);
+            continue;
+        }
+        
+        // Check for collision with players
+        if (bullet.owner !== player1.m && checkCollision(bullet, player1)) {
+            playerHit(player1);
+            bullets.splice(i, 1);
+        }
+        
+        if (bullet.owner !== player2.m && checkCollision(bullet, player2)) {
+            playerHit(player2);
+            bullets.splice(i, 1);
+        }
+    }
+    
+    // Update cooldowns
+    if (player1.shootCooldown > 0) player1.shootCooldown--;
+    if (player2.shootCooldown > 0) player2.shootCooldown--;
+}
+
+// Draw bullets
+function drawBullets() {
+    for (const bullet of bullets) {
+        ctx.fillStyle = bullet.color;
+        ctx.fillRect(bullet.x - bullet.width/2, bullet.y - bullet.height/2, bullet.width, bullet.height);
+    }
+}
+
+// Collision detection
+function checkCollision(obj1, obj2) {
+    return obj1.x < obj2.x + obj2.width &&
+           obj1.x + obj1.width > obj2.x &&
+           obj1.y < obj2.y + obj2.height &&
+           obj1.y + obj1.height > obj2.y;
+}
+
+// Player hit by bullet
+function playerHit(player) {
+    if (player.m === 1) {
+        resetPlayer1();
+        player2.score++;
+    } else {
+        resetPlayer2();
+        player1.score++;
+    }
+}
 
 console.log(player1);
 console.log(player2);
@@ -100,39 +179,50 @@ function movePlayer(player) {
 
     if (player.m === 1) {
         // Horizontal movement
-        if ( keys['KeyA']) {
+        if (keys.KeyA) {
             player.velocityX = -player.speed;
-        } else if (keys['KeyD']) {
+            player.lastDirection = -1;
+        } else if (keys.KeyD) {
             player.velocityX = player.speed;
+            player.lastDirection = 1;
         } else {
             player.velocityX = 0;
         }
 
         // Jumping
-        if (( keys['KeyW'] ) && !player.isJumping) {
+        if (keys.KeyW && !player.isJumping) {
             player.velocityY = -player.jumpForce;
             player.isJumping = true;
+        }
+        
+        // Shooting
+        if (keys.KeyF) {
+            createBullet(player);
         }
 
     } else {
         // Horizontal movement
-        if (keys['ArrowLeft']) {
+        if (keys.ArrowLeft) {
             player.velocityX = -player.speed;
-        } else if (keys['ArrowRight'] ) {
+            player.lastDirection = -1;
+        } else if (keys.ArrowRight) {
             player.velocityX = player.speed;
+            player.lastDirection = 1;
         } else {
             player.velocityX = 0;
         }
 
         // Jumping
-        if ((keys['ArrowUp'] ) && !player.isJumping) {
+        if (keys.ArrowUp && !player.isJumping) {
             player.velocityY = -player.jumpForce;
             player.isJumping = true;
         }
+        
+        // Shooting
+        if (keys.ShiftRight) {
+            createBullet(player);
+        }
     }
-
-
-
 
     // Apply velocity
     player.x += player.velocityX;
@@ -171,9 +261,11 @@ function movePlayer(player) {
 function playerDie(player) {    
     if (player.m === 1) {
         resetPlayer1()
+        resetPlayer2()
         player2.score++
     } else if (player.m === 2) {
         resetPlayer2()
+        resetPlayer1()
         player1.score++
     }
     console.log(`${player} died`)
@@ -188,17 +280,20 @@ function drawGameOver() {
     ctx.textAlign = 'center';
     ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
     ctx.font = '20px Arial';
-    ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+    ctx.fillText(`Final Score: ${player1.score} - ${player2.score}`, canvas.width / 2, canvas.height / 2 + 20);
     ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 60);
 }
 
 function restartGame() {
     player1.x = 100;
     player1.y = 200;
-    player2.x = 100;
+    player2.x = 700;
     player2.y = 200;
+    player1.score = 0;
+    player2.score = 0;
     gameOver = false;
     generatePlatforms();
+    bullets.length = 0; // Clear all bullets
 }
 
 function generatePlatforms() {
@@ -218,16 +313,18 @@ function gameLoop() {
     if (!gameOver) {
         // Update game state
         movePlayer(player1);
-        movePlayer(player2)
+        movePlayer(player2);
+        updateBullets();
 
         // Draw elements
         drawPlatforms();
         drawPlayer(player1);
         drawPlayer(player2);
+        drawBullets();
         drawScore();
     } else {
         drawGameOver();
-        if (keys['Space']) {
+        if (keys.Space) {
             restartGame();
         }
     }
