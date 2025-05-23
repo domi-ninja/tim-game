@@ -88,6 +88,7 @@ function resetPlayer2() {
     player2.isJumping = false
 
     let platformNr = Math.floor(Math.random() * platforms.length)
+    // wenn der zufällige platformnr gleich der platformnr von player1 ist, dann wiederhole die schleife
     while (platformNr === player1.platformNr) {
         platformNr = Math.floor(Math.random() * platforms.length)
     }
@@ -224,7 +225,7 @@ function movePlayer(player) {
         }
         
         // Shooting
-        if (keys.KeyF) {
+        if (keys.KeyF || keys.Capsadaock) {
             createBullet(player);
         }
 
@@ -242,13 +243,13 @@ function movePlayer(player) {
         }
 
         // Jumping
-        if (keys.ArrowUp && !player.isJumping) {
+        if ( (keys.ArrowUp || keys.ShiftRight) && !player.isJumping) {
             player.velocityY = -player.jumpForce;
             player.isJumping = true;
         }
         
         // Shooting
-        if (keys.ShiftRight || keys.CtrlRight) {
+        if ( keys.ControlRight || keys.Numpad0) {
             createBullet(player);
         }
     }
@@ -317,8 +318,10 @@ function drawGameOver() {
     ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
     ctx.font = '20px Arial';
     if (player1.score > player2.score) {
+        ctx.fillStyle = player1.color;
         ctx.fillText(`Player 1 gewinnt! ${player1.score}:${player2.score}`, canvas.width / 2, canvas.height / 2 + 20);
     } else {
+        ctx.fillStyle = player2.color;
         ctx.fillText(`Player 2 gewinnt! ${player2.score}: ${player1.score}`, canvas.width / 2, canvas.height / 2 + 20);
     }
     ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 60);
@@ -377,8 +380,11 @@ window.addEventListener('resize', () => {
 }); 
 
 function drawScore() {
-    ctx.fillStyle = 'white';
     ctx.font = '20px Arial';
+
+    ctx.fillStyle = player1.color;
     ctx.fillText(`Score: ${player1.score}`, 100, 30);
+
+    ctx.fillStyle = player2.color;
     ctx.fillText(`Score: ${player2.score}`, 600, 30);
 }
