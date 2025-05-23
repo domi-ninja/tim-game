@@ -16,14 +16,16 @@ body {
 
 .game-container {
     position: relative;
-    width: 800px;
-    height: 400px;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 #gameCanvas {
-    background-color: #87CEEB;
     width: 100%;
     height: 100%;
+    background-color: #87CEEB;
+    max-width: 100%;
+    max-height: 100%;
 } 

@@ -3,12 +3,25 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Set canvas dimensions to match CSS
-canvas.width = 1000;
+canvas.width = 1200;
 canvas.height = 800;
 
 // Game assets and variables
 const gravity = 0.5;
 let gameOver = false;
+
+// Platforms arrayss
+const platforms = [
+    { x: 0, y: 350, width: 200, height: 20, color: '#4CAF50' },
+    { x: 280, y: 350, width: 150, height: 20, color: '#4CAF50' },
+    { x: 450, y: 200, width: 150, height: 20, color: '#4CAF50' },
+    { x: 650, y: 350, width: 200, height: 20, color: '#4CAF50' },
+    { x: 500, y: 650, width: 200, height: 20, color: '#4CAF50' },
+    { x: 200, y: 560, width: 200, height: 20, color: '#4CAF50' },
+    { x: 500, y: 475, width: 100, height: 20, color: '#4CAF50' },
+    { x: 0, y: 150, width: 300, height: 20, color: '#4CAF50' },
+    { x: 850, y: 650, width: 200, height: 20, color: '#4CAF50' },
+]
 
 // Player properties
 const player1= {
@@ -45,6 +58,9 @@ const player2 = {
     shootCooldown: 0
 };
 
+resetPlayer1()
+resetPlayer2()
+
 // Bullets array
 const bullets = [];
 const BULLET_SPEED = 10;
@@ -56,6 +72,12 @@ function resetPlayer1() {
     player1.velocityX = 0
     player1.velocityY = 0
     player1.isJumping = false
+
+    const platformNr = Math.floor(Math.random() * platforms.length)
+    const randomPlatform = platforms[platformNr]
+    player1.platformNr = platformNr
+    player1.x = randomPlatform.x + randomPlatform.width/2 - player1.width/2
+    player1.y = randomPlatform.y - player1.height
 }
 
 function resetPlayer2() {
@@ -64,6 +86,14 @@ function resetPlayer2() {
     player2.velocityX = 0
     player2.velocityY = 0
     player2.isJumping = false
+
+    let platformNr = Math.floor(Math.random() * platforms.length)
+    while (platformNr === player1.platformNr) {
+        platformNr = Math.floor(Math.random() * platforms.length)
+    }
+    const randomPlatform = platforms[platformNr]
+    player2.x = randomPlatform.x + randomPlatform.width/2 - player2.width/2
+    player2.y = randomPlatform.y - player2.height
 }
 
 // Create bullet function
@@ -76,6 +106,7 @@ function createBullet(player) {
         width: 8,
         height: 8,
         velocityX: BULLET_SPEED * player.lastDirection,
+        velocityY: -3,
         color: player.color,
         owner: player.m
     });
@@ -85,9 +116,17 @@ function createBullet(player) {
 
 // Update bullets function
 function updateBullets() {
+    // für jeden bullet
     for (let i = bullets.length - 1; i >= 0; i--) {
+        // aktuelles bullet in variable
         const bullet = bullets[i];
+
+        // bullet fallen
+        bullet.velocityY += gravity * 0.3;
+
+        // bullet bewegen
         bullet.x += bullet.velocityX;
+        bullet.y += bullet.velocityY;
         
         // Remove bullets that go off-screen
         if (bullet.x < 0 || bullet.x > canvas.width) {
@@ -134,11 +173,8 @@ function playerHit(player) {
         playerDie(player1);
     } else {
         playerDie(player2);
-    }
+     }
 }
-
-console.log(player1);
-console.log(player2);
 
 
 // Input handling
@@ -169,6 +205,7 @@ function movePlayer(player) {
     if (!player) return;
 
     if (player.m === 1) {
+        //spieler 1
         // Horizontal movement
         if (keys.KeyA) {
             player.velocityX = -player.speed;
@@ -192,6 +229,7 @@ function movePlayer(player) {
         }
 
     } else {
+        // spieler2
         // Horizontal movement
         if (keys.ArrowLeft) {
             player.velocityX = -player.speed;
@@ -255,13 +293,10 @@ function playerDie(player) {
         resetPlayer2()
         player2.score++
     } else if (player.m === 2) {
-        resetPlayer2()
         resetPlayer1()
+        resetPlayer2()
         player1.score++
     }
-
-    console.log(player1.score)
-    console.log(player2.score)
 
     if (player1.score > 4) {
         gameOver = true
@@ -300,18 +335,8 @@ function restartGame() {
     bullets.length = 0; // Clear all bullets
 }
 
-// Platforms arrayss
-let platforms = [
-    { x: 0, y: 350, width: 200, height: 20, color: '#4CAF50' },
-    { x: 280, y: 350, width: 150, height: 20, color: '#4CAF50' },
-    { x: 450, y: 200, width: 150, height: 20, color: '#4CAF50' },
-    { x: 650, y: 350, width: 200, height: 20, color: '#4CAF50' },
-    { x: 500, y: 650, width: 200, height: 20, color: '#4CAF50' },
-    { x: 200, y: 560, width: 200, height: 20, color: '#4CAF50' },
-    { x: 500, y: 475, width: 100, height: 20, color: '#4CAF50' },
-    { x: 0, y: 150, width: 300, height: 20, color: '#4CAF50' },
-    { x: 850, y: 650, width: 200, height: 20, color: '#4CAF50' },
-]
+
+
 // Game loop
 function gameLoop() {
     // Clear canvas
@@ -354,6 +379,6 @@ window.addEventListener('resize', () => {
 function drawScore() {
     ctx.fillStyle = 'white';
     ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${player1.score}`, 20, 30);
+    ctx.fillText(`Score: ${player1.score}`, 100, 30);
     ctx.fillText(`Score: ${player2.score}`, 600, 30);
 }
