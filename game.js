@@ -212,7 +212,7 @@ function movePlayer(player) {
         }
         
         // Shooting
-        if (keys.ShiftRight) {
+        if (keys.ShiftRight || keys.CtrlRight) {
             createBullet(player);
         }
     }
@@ -261,7 +261,17 @@ function playerDie(player) {
         resetPlayer1()
         player1.score++
     }
-    console.log(`${player} died`)
+
+    console.log(player1.score)
+    console.log(player2.score)
+
+    if (player1.score > 4) {
+        gameOver = true
+        console.log(`Player 1 wins!`)
+    } else if (player2.score > 4) {
+        gameOver = true
+        console.log(`Player 2 wins!`)
+    }
 }
 
 
@@ -287,7 +297,6 @@ function restartGame() {
     gameOver = false;
     bullets.length = 0; // Clear all bullets
 }
-
 
 // Platforms arrayss
 let platforms = [
